@@ -1,0 +1,393 @@
+/* Variables de base */
+:root.light {
+  --bg: #f4f6f8;
+  --card-bg: #ffffff8e;
+  --card-bg1: #1b1e22;
+  --cardd-bg:#e64141;
+  --text: #2a2a2a8c;
+  --accent: #f00202;
+  --border: #d1d5db;
+  --hover: #303f9f;
+  --pending-bg: #fffde6;
+  --modal-bg: rgba(0,0,0,0.3);
+  --scrollbar-bg: rgb(138, 138, 138);
+  --scrollbar-thumb: #aaa;
+}
+:root.dark {
+  --bg: #181a1f;
+  --cardd-bg:#242629;
+  --card-bg: #242629; 
+  --card-bg1: #242629;
+  --text: #e4e4e4;
+  --accent: #e64141;
+  --border: #3e4044;
+  --hover: #2a2c31;
+  --pending-bg: #444;
+  --modal-bg: rgba(0,0,0,0.7);
+   --scrollbar-bg: #ccc;
+  --scrollbar-thumb: #aaa;
+}
+
+.users-page {
+  background: var(--bg);
+  color: var(--text);
+  padding: 1.5rem 1rem 4rem; /* bottom padding for fixed TabBar */
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+
+/* Title */
+.users-page h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: var(--accent);
+}
+
+/* -------------------- */
+/* Tab Buttons (En attente / Tous) */
+/* -------------------- */
+.tab-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.tab-buttons button {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  background: var(--cardd-bg);
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .2s, background .2s;
+}
+.tab-buttons button.active {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+.tab-buttons button:hover:not(.active) {
+  background: var(--hover);
+}
+
+/* -------------------- */
+/* Search & Filter Bar  */
+/* -------------------- */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* Search Field */
+.search-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+  max-width: 400px;
+}
+.search-bar .icon {
+  position: absolute;
+  top: 50%; left: 0.75rem;
+  transform: translateY(-50%);
+  color: #888;
+}
+.search-bar input {
+  width: 100%;
+  padding: 0.6rem 0.75rem 0.6rem 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color .2s;
+}
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Filter Button */
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.filter-toggle:hover {
+  background: var(--hover);
+}
+
+/* Filter Panel */
+.filter-panel {
+  position: absolute;
+  top: 100%;
+  right: 1rem;
+  width: 280px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  z-index: 20;
+}
+
+/* Role Dropdown */
+.filter-role {
+  position: relative;
+}
+.filter-role button {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+.filter-role .dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.filter-role .dropdown div {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.filter-role .dropdown div:hover {
+  background: var(--hover);
+}
+
+/* Date Fields */
+.date-filters {
+  display: flex;
+  gap: 0.5rem;
+}
+.date-filters input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* -------------------- */
+/* Cards Container      */
+/* -------------------- */
+.cards-container {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(400px,1fr));
+  margin-bottom: 2rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+/* Custom scrollbar */
+.cards-container::-webkit-scrollbar {
+  width: 8px;
+}
+.cards-container::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+.cards-container::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-bg);
+  border-radius: 4px;
+}
+/* Barre de recherche */
+.users-search {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+}
+.users-search .icon {
+  position: absolute;
+  top: 50%; left: .75rem;
+  transform: translateY(-50%);
+  color: #888;
+}
+.users-search input {
+  width: 100%;
+  padding: .6rem .75rem .6rem 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color .2s;
+}
+.users-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+/* -------------------- */
+/* User Card Styles     */
+/* -------------------- */
+.user-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform .2s, box-shadow .2s;
+}
+.user-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+.user-card.pending {
+  background: var(--pending-bg);
+}
+
+/* User Info */
+.user-info {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.avatar {
+  width: 48px; height: 48px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; font-weight: bold;
+}
+.user-info h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.small {
+  margin: 0.15rem 0;
+  font-size: 0.85rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+/* -------------------- */
+/* Action Icons         */
+/* -------------------- */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+.icon {
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: color .2s, transform .2s;
+}
+.icon:hover {
+  transform: scale(1.1);
+}
+.icon.accept { color: #28a745; }
+.icon.reject { color: #e74c3c; }
+.icon.delete { color: #e74c3c; }
+.icon.edit   { color: var(--accent); }
+.icon.refresh{ color: #f39c12; }
+
+/* -------------------- */
+/* No Results Message   */
+/* -------------------- */
+.no-users {
+  text-align: center;
+  color: #888;
+  font-size: 1rem;
+}
+
+/* -------------------- */
+/* Filter Panel Animation */
+/* -------------------- */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.no-users {
+  text-align: center;
+  color: #888;
+  font-size: 1rem;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed; inset: 0;
+  backdrop-filter: blur(2px);
+  background: var(--modal-bg1);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: var(--card-bg1);
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%; max-width: 400px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.modal h3 {
+  margin-top: 0; margin-bottom: 1rem;
+  color: var(--accent);
+}
+.modal label {
+  display: block;
+  margin-bottom: .75rem;
+  font-weight: 500;
+}
+.modal input {
+  width: 100%;
+  padding: .6rem .75rem;
+  margin-top: .25rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Password field */
+.password-field .pass-input {
+  display: flex; align-items: center;
+}
+.password-field svg {
+  margin-left: -2rem;
+  cursor: pointer;
+  color: #888;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: 1.5rem;
+}
+.btn-cancel, .btn-save {
+  padding: .6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-cancel { background: #ccc; color: #333; }
+.btn-cancel:hover { background: #bbb; }
+.btn-save { background: var(--accent); color: #fff; }
+.btn-save:hover { background: #005fa3; }

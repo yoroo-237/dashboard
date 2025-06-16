@@ -1,0 +1,134 @@
+:root {
+  --tabbar-height: 60px;
+}
+
+.stats-page {
+  padding: 2rem;
+  padding-bottom: calc(2rem + var(--tabbar-height));
+  background: var(--bg);
+  min-height: 100vh;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+}
+
+.stats-title {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding: 1rem 0;
+  z-index: 5;
+  text-align: center;
+  font-size: 2.25rem;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  animation: fadeIn 0.6s ease;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: .75rem;
+  padding: 1.25rem;
+  text-align: center;
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+  animation: fadeInUp .5s ease both;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+.stat-card.accent {
+  border-color: var(--accent);
+}
+.stat-card h3 {
+  font-size: 1rem;
+  margin-bottom: .5rem;
+  color: var(--text);
+}
+.stat-value {
+  font-size: 2rem;
+  color: var(--text);
+  margin: .5rem 0;
+  font-weight: bold;
+  transition: color .3s;
+}
+.stat-card.accent .stat-value {
+  color: var(--accent);
+}
+.pending {
+  color: #e07c24;
+  font-style: italic;
+}
+
+/* Grilles de charts */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(500px,1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Chart-card */
+.chart-card {
+  background: var(--card-bg1);
+  border: none;
+  border-radius: .75rem;
+  padding: 1rem;
+  height: 400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn .6s ease both;
+}
+.chart-card.small {
+  height: 400px;
+}
+.chart-card h4 {
+  margin: 0 0 .5rem;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-align: center;
+}
+.chart-card canvas {
+  flex: 1;
+}
+
+/* Placeholders */
+.chart-placeholder {
+  background: var(--card-bg);
+  border: 2px dashed var(--border);
+  border-radius: .75rem;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-style: italic;
+  animation: fadeIn .6s ease both;
+}
+
+/* Scrollbar */
+.stats-page::-webkit-scrollbar {
+  width: 8px;
+}
+.stats-page::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
