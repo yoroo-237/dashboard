@@ -164,4 +164,13 @@ export const addReview = data =>
    UTILITAIRES / EXPORT PAR DÉFAUT
    ================================ */
 
+
+   // fetch
+fetch(`${process.env.REACT_APP_API_URL}/api/ping`, {
+  credentials: 'include'    // si tu gères les sessions/cookies
+})
+  .then(res => res.json())
+  .then(console.log);
+
+
 export default api;
