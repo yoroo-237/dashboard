@@ -5,7 +5,6 @@ import axios from 'axios';
 
 // Base URL du back-end (définie dans .env.local ou fallback sur localhost:5000)
 const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-console.log('API base URL:', process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API,
