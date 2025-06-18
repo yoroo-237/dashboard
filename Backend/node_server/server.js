@@ -2,15 +2,18 @@
 
 const fs   = require('fs');
 const path = require('path');
-require('dotenv-safe').config({ allowEmptyValues:false, example:'.env.example' });
+// Chargement simple des variables d’environnement
+require('dotenv').config();
 
-const express  = require('express');
-const helmet   = require('helmet');
-const cors     = require('cors');
+const express   = require('express');
+const helmet    = require('helmet');
+const cors      = require('cors');
 const rateLimit = require('express-rate-limit');
-const session  = require('express-session');
-const passport = require('passport');
+const session   = require('express-session');
+const passport  = require('passport');
 require('./passport');
+
+
 
 const authRouter       = require('./routes/auth');
 const passwordRouter   = require('./routes/password');
@@ -107,5 +110,4 @@ app.use((err, req, res, next) => {
   res.status(err.status||500).json({ error: err.message||'Erreur serveur' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Backend on http://localhost:${PORT}`));
+app.listen(console.log(`🚀 Backend start`));
