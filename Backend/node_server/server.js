@@ -110,4 +110,5 @@ app.use((err, req, res, next) => {
   res.status(err.status||500).json({ error: err.message||'Erreur serveur' });
 });
 
-app.listen(console.log(`🚀 Backend start`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Backend on http://localhost:${PORT}`));
