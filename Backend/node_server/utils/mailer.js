@@ -1,7 +1,5 @@
-// mailer.js
-
-require('dotenv').config();
 const nodemailer = require('nodemailer');
+require('dotenv-safe').config();
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -9,19 +7,16 @@ const transporter = nodemailer.createTransport({
   secure: Number(process.env.SMTP_PORT) === 465,
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    pass: process.env.SMTP_PASS
   },
   tls: {
-    rejectUnauthorized: false,
-  },
+    rejectUnauthorized: false
+  }
 });
 
 transporter.verify(err => {
-  if (err) {
-    console.error('❌ SMTP error:', err);
-  } else {
-    console.log('✅ SMTP prêt à envoyer des emails');
-  }
+  if (err) console.error('❌ SMTP error:', err);
+  else console.log('✅ SMTP prêt à envoyer des emails');
 });
 
 module.exports = transporter;

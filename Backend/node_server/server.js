@@ -2,18 +2,15 @@
 
 const fs   = require('fs');
 const path = require('path');
-// Chargement simple des variables d’environnement
-require('dotenv').config();
+require('dotenv-safe').config({ allowEmptyValues:false, example:'.env.example' });
 
-const express   = require('express');
-const helmet    = require('helmet');
-const cors      = require('cors');
+const express  = require('express');
+const helmet   = require('helmet');
+const cors     = require('cors');
 const rateLimit = require('express-rate-limit');
-const session   = require('express-session');
-const passport  = require('passport');
+const session  = require('express-session');
+const passport = require('passport');
 require('./passport');
-
-
 
 const authRouter       = require('./routes/auth');
 const passwordRouter   = require('./routes/password');
@@ -43,10 +40,10 @@ app.use(express.json());
 
 // CORS global
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // ex: http://localhost:3000
+  origin: process.env.FRONTEND_URL,
   credentials: true,
-  allowedHeaders: ['Content-Type','Authorization']
 }));
+
 
 // rate limiter
 app.use(rateLimit({ windowMs: 15*60*1000, max: 100 }));
@@ -78,6 +75,10 @@ app.use('/api/admin',    adminRouter);
 app.use('/api/users',    usersRouter);
 app.use('/api/products', prodRouter);
 app.use('/api/reviews', reviewsRouter);
+app.get('/api/ping', (req, res) =>
+  res.json({ ok: true, timestamp: Date.now() })
+);
+++++++
 
 // **— Multer pour l’upload d’une image “fieldname = image” —**
 const storage = multer.diskStorage({
@@ -111,4 +112,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Backend on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 port:${PORT}`));
