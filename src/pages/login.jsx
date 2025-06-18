@@ -45,7 +45,7 @@ export default function Login({ toggle, theme, setTheme }) {
         toast.error(data.error || 'Erreur');
       }
     } catch {
-      toast.error(data.err,'Impossible de contacter le serveur');
+      toast.error(data.error,'Impossible de contacter le serveur');
     }
   };
   const onTelegramAuth = async user => {
