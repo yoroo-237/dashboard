@@ -1,10 +1,9 @@
 // src/services/api.js
-// src/services/api.js
 
 import axios from 'axios';
 
-// Base URL du back-end (définie dans .env.local ou fallback sur localhost:5000)
-const API = process.env.REACT_APP_API_URL ;
+// Base URL du back-end (définie dans .env.local ou fallback sur votre URL Render)
+const API = process.env.REACT_APP_API_URL || 'https://dashboard-backend-eydv.onrender.com/api';
 
 const api = axios.create({
   baseURL: API,
@@ -25,10 +24,10 @@ api.interceptors.request.use(config => {
    ================================ */
 
 export const signup = data =>
-  api.post('/api/auth/signup', data);
+  api.post('/auth/signup', data);
 
 export const login = data =>
-  api.post('/api/auth/login', data);
+  api.post('/auth/login', data);
 
 /* ================================
    UTILISATEURS (JSON)
@@ -36,141 +35,128 @@ export const login = data =>
 
 // Récupérer les utilisateurs en attente
 export const fetchPendingUsers = () =>
-  api.get('/api/users/pending');
+  api.get('/users/pending');
 
 // Récupérer **tous** les utilisateurs
 export const fetchAllUsers = () =>
-  api.get('/api/users');
+  api.get('/users');
 
-// Valider une inscription (PUT /api/users/validate/:id)
+// Valider une inscription (PUT /users/validate/:id)
 export const validateUser = id =>
-  api.put(`/api/users/validate/${id}`);
+  api.put(`/users/validate/${id}`);
 
 // Rejeter (supprimer) une inscription
 export const rejectUser = id =>
-  api.delete(`/api/users/${id}`);
+  api.delete(`/users/${id}`);
 
 // Supprimer un utilisateur (depuis "Tous les utilisateurs")
 export const deleteUser = id =>
-  api.delete(`/api/users/${id}`);
+  api.delete(`/users/${id}`);
 
 // Récupérer l’activité d’un utilisateur
 export const fetchUserActivity = id =>
-  api.get(`/api/users/${id}/activity`);
+  api.get(`/users/${id}/activity`);
 
-// Mettre à jour un utilisateur (PATCH /api/users/:id)
+// Mettre à jour un utilisateur (PATCH /users/:id)
 export const updateUser = (id, data) =>
-  api.patch(`/api/users/${id}`, data);
+  api.patch(`/users/${id}`, data);
 
 /* ================================
    PRODUITS (mix JSON + FormData)
    ================================ */
 
-// 1) Récupérer la liste des produits
 export const fetchProducts = () =>
-  api.get('/api/products');
+  api.get('/products');
 
-// 2) Ajouter un produit (FormData : inclut image, etc.)
 export const addProduct = formData =>
-  api.post('/api/products', formData, {
+  api.post('/products', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
-// 3) Mettre à jour un produit (FormData)
 export const updateProduct = (id, formData) =>
-  api.put(`/api/products/${id}`, formData, {
+  api.put(`/products/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
-// 4) Supprimer un produit
 export const deleteProduct = id =>
-  api.delete(`/api/products/${id}`);
+  api.delete(`/products/${id}`);
 
-// 5) Catégories de produits
+/* ================================
+   CATÉGORIES DE PRODUITS
+   ================================ */
+
 export const fetchCategoriesProduct = () =>
-  api.get('/api/categories/product');
+  api.get('/categories/product');
 
 export const addCategoryProduct = data =>
-  api.post('/api/categories/product', data);
+  api.post('/categories/product', data);
 
 export const deleteCategoryProduct = id =>
-  api.delete(`/api/categories/product/${id}`);
+  api.delete(`/categories/product/${id}`);
 
 /* ================================
    BLOGS / ARTICLES (mix JSON + FormData)
    ================================ */
 
-// 1) Récupérer tous les articles
 export const fetchBlogs = () =>
-  api.get('/api/blogs');
+  api.get('/blogs');
 
-// 2) Ajouter un nouvel article (FormData)
 export const addBlog = formData =>
-  api.post('/api/blogs', formData, {
+  api.post('/blogs', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
-// 3) Mettre à jour un article (FormData)
 export const updateBlog = (id, formData) =>
-  api.put(`/api/blogs/${id}`, formData, {
+  api.put(`/blogs/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
-// 4) Supprimer un article
 export const deleteBlog = id =>
-  api.delete(`/api/blogs/${id}`);
+  api.delete(`/blogs/${id}`);
 
-// 5) Catégories de blog
+/* ================================
+   CATÉGORIES DE BLOG
+   ================================ */
+
 export const fetchCategoriesBlog = () =>
-  api.get('/api/categories/blog');
+  api.get('/categories/blog');
 
 export const addCategoryBlog = data =>
-  api.post('/api/categories/blog', data);
+  api.post('/categories/blog', data);
 
 export const deleteCategoryBlog = id =>
-  api.delete(`/api/categories/blog/${id}`);
+  api.delete(`/categories/blog/${id}`);
 
-// 6) Tags
+/* ================================
+   TAGS
+   ================================ */
+
 export const fetchTags = () =>
-  api.get('/api/tags');
+  api.get('/tags');
 
 export const addTag = data =>
-  api.post('/api/tags', data);
+  api.post('/tags', data);
 
 export const deleteTag = id =>
-  api.delete(`/api/tags/${id}`);
+  api.delete(`/tags/${id}`);
 
 /* ================================
    STATS & AUDIT (JSON)
    ================================ */
 
 export const fetchStats = () =>
-  api.get('/api/stats');
+  api.get('/stats');
 
 export const fetchAudit = () =>
-  api.get('/api/audit');
-export const fetchReviews = () =>
-  api.get('/api/reviews')
+  api.get('/audit');
 
-// → CRÉER un nouvel avis
+export const fetchReviews = () =>
+  api.get('/reviews');
+
+// → CRÉER un nouvel avis (FormData)
 export const addReview = data =>
-  // Ici, data sera un FormData, donc on n’utilise pas fetchJSON (qui force JSON).
-  // On peut utiliser axios directement ou fetch en multipart/form-data :
-  api.post('/api/reviews', data, {
+  api.post('/reviews', data, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
-
-/* ================================
-   UTILITAIRES / EXPORT PAR DÉFAUT
-   ================================ */
-
-
-   // fetch
-fetch(`${process.env.REACT_APP_API_URL}/api/ping`, {
-  credentials: 'include'    // si tu gères les sessions/cookies
-})
-  .then(res => res.json())
-  .then(console.log);
-
 
 export default api;
