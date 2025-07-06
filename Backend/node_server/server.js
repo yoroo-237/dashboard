@@ -51,7 +51,7 @@ app.use(express.json());
 // CORS global
 // ───────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: "https://dashboard-gaspass.onrender.com" ,
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
