@@ -1,0 +1,52 @@
+# render.yaml
+
+# 1) Static Site pour le front-end
+static_sites:
+  - name: dashboard-gaspass          # nom exact de votre Static Site sur Render
+    repo: https://github.com/yoroo-237/dashboard
+    branch: main
+    rootDir: .                       # le front est à la racine
+    buildCommand: npm install && npm run build
+    publishPath: build               # dossier généré par React
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://dashboard-backend-eydv.onrender.com
+    routes:
+      - type: rewrite
+        from: /api/*
+        to: https://dashboard-backend-eydv.onrender.com/api/:splat
+        status: 200
+
+# 2) Web Service pour le back-end
+services:
+  - type: web
+    name: dashboard-backend          # nom exact de votre Web Service sur Render
+    repo: https://github.com/yoroo-237/dashboard
+    branch: main
+    rootDir: Backend/node_server     # chemin vers votre dossier server.js
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # Recopiez ici toutes vos variables d’environnement Back déjà configurées dans l’UI
+      - key: PGHOST
+        value: aws-0-us-east-1.pooler.supabase.com
+      - key: PGUSER
+        value: postgres.kxefyuzrycmyumhhkchu
+      - key: PGPASSWORD
+        value: Mkomegmbdysdia4
+      - key: PGDATABASE
+        value: postgres
+      - key: PGPORT
+        value: "5432"
+      - key: SESSION_SECRET
+        value: uneCleUltraSecretePourLesSessions
+      - key: JWT_SECRET
+        value: eyJhbGciOiJIUzI1Ni...
+      - key: PEPPER
+        value: pepperComplexe123!
+      - key: FRONTEND_URL
+        value: https://dashboard-gaspass.onrender.com
+      # …le reste (SMTP_*, TELEGRAM_BOT_TOKEN, etc.)
+
+    # Optionnel : health check
+    healthCheckPath: /healthz
