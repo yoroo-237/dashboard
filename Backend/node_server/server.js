@@ -152,6 +152,19 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Erreur serveur' });
 });
 
+// ____________________
+// Default
+// ___________________
+// Route racine pour éviter l'erreur « Route introuvable »
+app.get('/', (req, res) => {
+  res.json({ message: 'Bienvenue sur mon service – tout fonctionne !' });
+});
+
+// Exemple d'autres routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // ────────────────────
 // Server startup
 // ────────────────────
