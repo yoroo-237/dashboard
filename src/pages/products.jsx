@@ -4,6 +4,7 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload } from 'react-icons/fi';
 import './Pages.css';
+const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Product() {
   const [products, setProducts] = useState([]);
@@ -32,11 +33,11 @@ export default function Product() {
   const [categories, setCategories] = useState([]);
   useEffect(() => {
     // Charger catégories
-    api.get('/api/categories/product') // Créer une route /api/categories si besoin
+    api.get(`${API_URL}/api/categories/product`) // Créer une route /api/categories si besoin
       .then(r=>setCategories(r.data))
       .catch(()=> toast.error('Impossible de charger catégories'));
     // Charger produits
-    api.get('/api/products')
+    api.get(`${API_URL}/api/products`)
       .then(r=>setProducts(r.data))
       .catch(()=> toast.error('Impossible de charger produits'));
   }, []);
@@ -45,7 +46,7 @@ export default function Product() {
 
   // Charger les produits existants
   useEffect(() => {
-    api.get('/api/products')
+    api.get(`${API_URL}/api/products`)
       .then(r => setProducts(r.data.map(p => ({
         ...p,
         // forcer rating en nombre
@@ -65,8 +66,8 @@ export default function Product() {
       const name = form.newCategory.trim();
       if (!name) return toast.warn("Nom vide");
       try {
-        await api.post('/api/categories/product', { name });
-        const { data } = await api.get('/api/categories/product');
+        await api.post(`${API_URL}/api/categories/product`, { name });
+        const { data } = await api.get(`${API_URL}/api/categories/product`);
         setCategories(data);
         toast.success("Catégorie ajoutée");
         setForm(f => ({ ...f, newCategory: '' }));
@@ -100,7 +101,7 @@ export default function Product() {
   const deleteCategory = async id => {
     if (!window.confirm('Supprimer cette catégorie ?')) return
     try {
-      await api.delete(`/api/categories/product/${id}`)
+      await api.delete(`${API_URL}/api/categories/product/${id}`)
       setCategories(cs => cs.filter(c => c.id !== id))
       toast.success('Catégorie supprimée')
     } catch {
@@ -122,13 +123,13 @@ export default function Product() {
 
       let res;
       if (editingId) {
-        res = await api.put(`/api/products/${editingId}`, data, {
+        res = await api.put(`${API_URL}/api/products/${editingId}`, data, {
           headers:{ 'Content-Type':'multipart/form-data' }
         });
         toast.success('Produit mis à jour !');
         setProducts(p=>p.map(x=> x.id===editingId ? res.data : x));
       } else {
-        res = await api.post('/api/products', data, {
+        res = await api.post(`${API_URL}/api/products`, data, {
           headers:{ 'Content-Type':'multipart/form-data' }
         });
         toast.success('Produit ajouté !');
@@ -168,7 +169,7 @@ export default function Product() {
   const handleDelete = async id => {
     if (!window.confirm("Supprimer ce produit ?")) return;
     try {
-      await api.delete(`/api/products/${id}`);
+      await api.delete(`${API_URL}/api/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
       toast.success('Produit supprimé !');
     } catch {

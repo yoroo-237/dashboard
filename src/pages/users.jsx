@@ -1,4 +1,3 @@
-// src/pages/Users.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   fetchPendingUsers,
@@ -28,36 +27,41 @@ export default function Users() {
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState({ open: false, user: null, showPass: false });
 
-  // 1) Stabilisation de loadData
   const loadData = useCallback(async () => {
     try {
-      let result, usersList;
+      // 1) Récupère la réponse axios
+      let response;
       if (tab === 'pending') {
-        result = await fetchPendingUsers();
+        response = await fetchPendingUsers();
       } else {
-        result = await fetchAllUsers();
+        response = await fetchAllUsers();
       }
 
-      // 2) Extraction du vrai tableau, quel que soit le format renvoyé
-      if (Array.isArray(result)) {
-        usersList = result;
-      } else if (Array.isArray(result.pending)) {
-        usersList = result.pending;
-      } else if (Array.isArray(result.users)) {
-        usersList = result.users;
-      } else if (Array.isArray(result.data)) {
-        usersList = result.data;
+      // 2) Extrait le data (axios le stocke en .data)
+      const payload = response && response.data ? response.data : response;
+
+      // 3) Trouve le vrai tableau selon la clé
+      let usersList = [];
+      if (Array.isArray(payload)) {
+        usersList = payload;
+      } else if (Array.isArray(payload.pending)) {
+        usersList = payload.pending;
+      } else if (Array.isArray(payload.users)) {
+        usersList = payload.users;
+      } else if (Array.isArray(payload.data)) {
+        usersList = payload.data;
       } else {
-        usersList = []; // fallback
+        console.warn('Format inattendu de la réponse API Users:', payload);
       }
 
-      // 3) On met à jour les états correspondants
+      // 4) MàJ états
       if (tab === 'pending') {
         setPending(usersList);
       } else {
         setAllUsers(usersList);
       }
-      setDisplayed(usersList);
+      // on clone pour toujours garantir un tableau
+      setDisplayed([...usersList]);
     } catch (err) {
       console.error('Erreur loadData:', err);
       toast.error('Erreur de chargement des utilisateurs');
@@ -66,12 +70,10 @@ export default function Users() {
     }
   }, [tab]);
 
-  // 4) Appel initial / au changement d’onglet
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // 5) Filtrage à chaque frappe ou changement de données
   useEffect(() => {
     const base = tab === 'pending' ? pending : allUsers;
     const filtered = Array.isArray(base)
@@ -84,7 +86,6 @@ export default function Users() {
     setDisplayed(filtered);
   }, [search, pending, allUsers, tab]);
 
-  // Actions utilisateur
   const handleValidate = async id => {
     await validateUser(id);
     toast.success('Utilisateur validé');
@@ -143,7 +144,7 @@ export default function Users() {
       </div>
 
       <div className="cards-container">
-        {Array.isArray(displayed) && displayed.length > 0 ? (
+        {displayed.length > 0 ? (
           displayed.map(u => (
             <div
               key={u.id}

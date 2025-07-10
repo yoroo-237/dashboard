@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import {FiUser, FiEye, FiEyeOff,FiPhone } from 'react-icons/fi';
 import {  FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
 import ThemeToggle from '../components/ThemeToggle';
+const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Login({ toggle, theme, setTheme }) {
   const [form, setForm] = useState({ identifier:'', password:'' });
@@ -26,7 +27,7 @@ export default function Login({ toggle, theme, setTheme }) {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify(form)
@@ -38,6 +39,7 @@ export default function Login({ toggle, theme, setTheme }) {
         toast.success(data.message);
         localStorage.setItem('token', data.token);
         localStorage.setItem('is_admin', data.user.is_admin);
+        console.log('🔐 is_admin flag:', data.user.is_admin);
         navigate('/home');
       } else if (res.status === 403) {
         toast.info(data.error);
@@ -49,7 +51,7 @@ export default function Login({ toggle, theme, setTheme }) {
     }
   };
   const onTelegramAuth = async user => {
-    const res = await fetch('/api/auth/telegram',{
+    const res = await fetch(`${API_URL}/api/auth/telegram`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(user)

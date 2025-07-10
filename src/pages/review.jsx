@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { FiEdit2, FiTrash2, FiUpload } from 'react-icons/fi';
 import './Pages.css';
+const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Review() {
   const [reviews, setReviews] = useState([]);
@@ -20,7 +21,7 @@ export default function Review() {
 
   // Récupérer la liste des avis au montage
   useEffect(() => {
-    api.get('/api/reviews')
+    api.get(`${API_URL}/api/reviews`)
       .then(res => setReviews(res.data))
       .catch(() => toast.error('Impossible de charger les avis'));
   }, []);
@@ -91,14 +92,14 @@ export default function Review() {
       let res;
       if (editingId) {
         // Mise à jour existante
-        res = await api.put(`/api/reviews/${editingId}`, data, cfg);
+        res = await api.put(`${API_URL}/api/reviews/${editingId}`, data, cfg);
         toast.success('Avis mis à jour !');
         setReviews(rs =>
           rs.map(r => (r.id === editingId ? res.data : r))
         );
       } else {
         // Création d’un nouvel avis
-        res = await api.post('/api/reviews', data, cfg);
+        res = await api.post(`${API_URL}/api/reviews`, data, cfg);
         toast.success('Avis publié !');
         setReviews(rs => [res.data, ...rs]);
       }
@@ -127,7 +128,7 @@ export default function Review() {
   const handleDelete = async id => {
     if (!window.confirm('Supprimer cet avis ?')) return;
     try {
-      await api.delete(`/api/reviews/${id}`);
+      await api.delete(`${API_URL}/api/reviews/${id}`);
       setReviews(rs => rs.filter(r => r.id !== id));
       toast.success('Avis supprimé !');
     } catch {

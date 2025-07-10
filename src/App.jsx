@@ -26,6 +26,8 @@ export default function App() {
   }, [theme]);
 
   const isAdmin = localStorage.getItem('is_admin') === 'true';
+  console.log('🚦 App isAdmin=', isAdmin);
+
   return (
     <BrowserRouter>
       <Toast />

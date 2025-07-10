@@ -4,6 +4,7 @@ import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload, FiClock } from 'react-icons/fi';
 import './Pages.css';
+const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Blog() {
   const [blogs, setBlogs]             = useState([]);
@@ -36,15 +37,15 @@ export default function Blog() {
 
   // → Au montage, on charge catégories, tags et articles
   useEffect(() => {
-    api.get('/api/categories/blog')
+    api.get(`${API_URL}/api/categories/blog`)
       .then(r => setCategories(r.data))
       .catch(() => toast.error('Impossible de charger les catégories'));
 
-    api.get('/api/tags')
+    api.get(`${API_URL}/api/tags`)
       .then(r => setTagsList(r.data))
       .catch(() => toast.error('Impossible de charger les tags'));
 
-    api.get('/api/blogs')
+    api.get(`${API_URL}/api/blogs`)
       .then(r => setBlogs(r.data))
       .catch(() => toast.error('Impossible de charger les articles'));
   }, []);
@@ -63,8 +64,8 @@ export default function Blog() {
     const name = form.newCategory.trim();
     if (!name) return toast.warn('Le nom de la catégorie est requis');
     try {
-      await api.post('/api/categories/blog', { name });
-      const { data } = await api.get('/api/categories/blog');
+      await api.post(`${API_URL}/api/categories/blog`, { name });
+      const { data } = await api.get(`${API_URL}/api/categories/blog`);
       setCategories(data);
       toast.success('Catégorie ajoutée');
     } catch (err) {
@@ -78,7 +79,7 @@ export default function Blog() {
   const deleteCategory = async (catId) => {
     if (!window.confirm('Supprimer cette catégorie ?')) return;
     try {
-      await api.delete(`/api/categories/blog/${catId}`);
+      await api.delete(`${API_URL}/api/categories/blog/${catId}`);
       setCategories(cs => cs.filter(c => c.id !== catId));
       toast.success('Catégorie supprimée');
       // Si c’était la catégorie actuellement sélectionnée
@@ -99,7 +100,7 @@ export default function Blog() {
     const name = form.newTag.trim();
     if (!name) return toast.warn('Le nom du tag est requis');
     try {
-      const { data } = await api.post('/api/tags', { name });
+      const { data } = await api.post(`${API_URL}/api/tags`, { name });
       // On l’insère en tête de liste
       setTagsList(ts => [data, ...ts]);
       toast.success('Tag ajouté');
@@ -114,7 +115,7 @@ export default function Blog() {
   const deleteTagOnList = async (tagId) => {
     if (!window.confirm('Supprimer ce tag définitivement ?')) return;
     try {
-      await api.delete(`/api/tags/${tagId}`);
+      await api.delete(`${API_URL}/api/tags/${tagId}`);
       setTagsList(ts => ts.filter(t => t.id !== tagId));
       toast.success('Tag supprimé');
       // Si ce tag était sélectionné dans le formulaire, on le retire
@@ -214,12 +215,12 @@ export default function Blog() {
       let res;
       if (editingId) {
         // Mise à jour
-        res = await api.put(`/api/blogs/${editingId}`, data, cfg);
+        res = await api.put(`${API_URL}/api/blogs/${editingId}`, data, cfg);
         toast.success('Article mis à jour !');
         setBlogs(bs => bs.map(b => (b.id === editingId ? res.data : b)));
       } else {
         // Création
-        res = await api.post('/api/blogs', data, cfg);
+        res = await api.post(`${API_URL}/api/blogs`, data, cfg);
         toast.success('Article publié !');
         setBlogs(bs => [res.data, ...bs]);
       }
@@ -265,7 +266,7 @@ export default function Blog() {
   const handleDelete = async (id) => {
     if (!window.confirm('Supprimer cet article ?')) return;
     try {
-      await api.delete(`/api/blogs/${id}`);
+      await api.delete(`${API_URL}/api/blogs/${id}`);
       setBlogs(bs => bs.filter(x => x.id !== id));
       toast.success('Article supprimé');
     } catch {

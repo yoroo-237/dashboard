@@ -6,6 +6,7 @@ import { FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
 import ThemeToggle from '../components/ThemeToggle';
 const validatePassword = pw =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(pw);
+const API_URL = process.env.REACT_APP_API_URL;
 
 const validatePhone = phone =>
   /^6\d{8}$/.test(phone);
@@ -30,7 +31,7 @@ export default function Signup({ toggle, theme, setTheme }) {
       return toast.error('Numéro de téléphone invalide.');
     }
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({  username: form.username, phone:form.phone,password: form.password })

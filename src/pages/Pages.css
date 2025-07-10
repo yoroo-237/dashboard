@@ -4,7 +4,6 @@
   --card-bg: #ffffff8e;
   --card-bg1: #ffffff;
   --text: #2a2a2a;
-  --text1: #2a2a2a;
   --accent: #f00202;
   --accent0: #444;
   --border: #d1d5db;
@@ -15,8 +14,6 @@
   --scrollbar-thumb: #aaa;
   --btn-val:#303f9f;
   --btn-val1:#a5abdf;
-  --pending-bg1: #bbbbbb;
-
 }
 :root.dark {
   --btn-val1:#c06a6a;
@@ -24,13 +21,11 @@
   --card-bg: #242629;
   --card-bg1: #2e2f33;
   --text: #e4e4e4;
-  --text1: #2e2f33;
   --accent: #e64141;
   --border: #3e4044;
   --hover: #2a2c31;
   --btn-val:#ff0000;
   --pending-bg: #444;
-  --pending-bg1: #a39090;
   --modal-bg: rgba(0,0,0,0.7);
   --scrollbar-bg: rgb(17, 17, 17);
   --scrollbar-thumb: #aaa;
@@ -393,9 +388,9 @@ body {
   margin-right: .5rem;
   font-size: .8rem;
 }
-.grid-tags {
-  background: var(--pending-bg1);
-  color: var(--text1);
+.grid-tag {
+  background: var(--pending-bg);
+  color: var(--text);
   padding: .2rem .4rem;
   border-radius: .25rem;
   margin-right: .3rem;
