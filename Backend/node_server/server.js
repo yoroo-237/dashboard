@@ -41,7 +41,7 @@ app.use(express.json());
 // CORS global
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://gaspassdash-front.onrender.com'
+  'https://dashboard-gaspass.onrender.com'
 ];
 
 app.use(cors({
