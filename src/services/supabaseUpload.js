@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient';
+
 // src/services/supabaseClient.js déjà présent
 // On réutilise le même client pour les produits et reviews
 
