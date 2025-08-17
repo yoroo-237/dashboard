@@ -41,25 +41,35 @@ router.post('/login',
   async (req, res) => {
     const { identifier, password } = req.body;
     const PEPPER = process.env.PEPPER;
+    console.log('Tentative login:', { identifier });
 
     // 1) Détecter si identifier = phone ou username
     const isPhone = /^\+\d{8,15}$/.test(identifier);
     const field   = isPhone ? 'phone' : 'username';
+    console.log('Recherche par champ:', field);
 
     // 2) Récupérer l’utilisateur
     const { rows } = await pool.query(
       `SELECT * FROM users WHERE ${field} = $1`, [identifier]
     );
     const user = rows[0];
-    if (!user) return res.status(400).json({ error: 'Utilisateur non trouvé' });
+    if (!user) {
+      console.log('Utilisateur non trouvé');
+      return res.status(400).json({ error: 'Utilisateur non trouvé' });
+    }
 
     // 3) Vérifier le mot de passe
     const match = await bcrypt.compare(password + PEPPER, user.password);
-    if (!match) return res.status(400).json({ error: 'Mot de passe incorrect' });
+    if (!match) {
+      console.log('Mot de passe incorrect');
+      return res.status(400).json({ error: 'Mot de passe incorrect' });
+    }
 
     // 4) Vérifier validation + admin
-    if (!user.is_validated && !user.is_admin)
+    if (!user.is_validated && !user.is_admin) {
+      console.log('Compte non validé');
       return res.status(403).json({ error: 'Compte en attente de validation' });
+    }
 
     // 5) Générer le JWT
     const token = jwt.sign({
