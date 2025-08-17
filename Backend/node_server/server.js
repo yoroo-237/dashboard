@@ -112,6 +112,17 @@ app.use('/api/stats',  statsRouter);
 app.use('/api/audit',  auditRouter);
 app.use('/api/visits', visitsRouter);
 
+// Test API pour vérifier la connexion à la base PostgreSQL/Supabase
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const pool = require('./db');
+    const { rows } = await pool.query('SELECT NOW() as now');
+    res.json({ success: true, now: rows[0].now });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 404 handler
 app.use((req, res) => res.status(404).json({ error:'Route introuvable' }));
 
