@@ -2,6 +2,7 @@
 const express = require('express');
 const pool    = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const { uploadToSupabaseStorage } = require('../utils/supabase');
 const router  = express.Router();
 
 /**
@@ -51,7 +52,7 @@ router.get('/', verifyToken, async (req, res) => {
  * Body attendu (multipart/form-data):
  *   - title            (string)
  *   - excerpt          (string)
- *   - image            (file)            [optionnel]
+ *   - image            (file ou URL)
  *   - image_caption    (string)          [optionnel]
  *   - author           (string)
  *   - content          (string)
@@ -63,7 +64,6 @@ router.get('/', verifyToken, async (req, res) => {
  */
 router.post('/', verifyToken, isAdmin, async (req, res) => {
   try {
-
     const {
       title,
       excerpt,
@@ -74,22 +74,27 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
       likes,
       comments_count,
       reading_time,
-      tags
+      tags,
+      image_url // Permet d'envoyer une URL depuis le front
     } = req.body;
 
     // tags est reçu comme “string JSON” => on transforme en tableau JavaScript  
     let tagsArray = [];
     try {
       tagsArray = Array.isArray(tags) ? tags : JSON.parse(tags || '[]');
-      // On veut juste les noms de tags (string), pas les IDs ici
-      // (on les transformera plus bas en IDs via SELECT)
     } catch (_) {
-      // Si JSON invalide, on garde tableau vide
       tagsArray = [];
     }
 
-    // Chemin vers l’image (si multer a fourni req.file)
-    const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : '';
+    let finalImageUrl = image_url || '';
+    // Si un fichier est envoyé (upload direct)
+    if (req.files && req.files.image) {
+      try {
+        finalImageUrl = await uploadToSupabaseStorage(req.files.image, 'blog-images');
+      } catch (e) {
+        return res.status(500).json({ error: 'Erreur upload image Supabase', details: e.message });
+      }
+    }
 
     // ------------------------------------------------------------------
     // 2) Insérer d’abord dans blog_post
@@ -100,23 +105,14 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
         author, content, category_id,
         likes, comments_count, reading_time
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-      RETURNING id, title, excerpt, image, image_caption, author, content,
-                category_id, likes, comments_count, reading_time, created_at;
+      RETURNING *
     `;
-    const insertValues = [
-      title,
-      excerpt,
-      imagePath,
-      image_caption || null,
-      author,
-      content,
-      category_id ? parseInt(category_id, 10) : null,
-      likes ? parseInt(likes, 10) : 0,
-      comments_count ? parseInt(comments_count, 10) : 0,
-      reading_time ? parseInt(reading_time, 10) : 0
-    ];
-    const blogResult = await pool.query(insertBlogSql, insertValues);
-    const newPost = blogResult.rows[0]; // contient {id,...}
+    const { rows } = await pool.query(insertBlogSql, [
+      title, excerpt, finalImageUrl, image_caption,
+      author, content, category_id,
+      likes, comments_count, reading_time
+    ]);
+    const blog = rows[0];
 
     // ------------------------------------------------------------------
     // 3) Pour chaque tag reçu (tagsArray contient des noms de tags),
@@ -142,7 +138,7 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
       //  b) insérer dans post_tag
       await pool.query(
         `INSERT INTO public.post_tag(post_id, tag_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,
-        [newPost.id, tagId]
+        [blog.id, tagId]
       );
     }
 
@@ -150,7 +146,7 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     // 4) Pour renvoyer l’article complet (avec tags et category), on refait
     //    la même requête que pour GET /api/blogs en filtrant sur newPost.id
     // ------------------------------------------------------------------
-    const { rows } = await pool.query(`
+    const { rows: rows2 } = await pool.query(`
       SELECT
         bp.id,
         bp.title,
@@ -174,9 +170,9 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
       LEFT JOIN public.tag t               ON pt.tag_id = t.id
       WHERE bp.id = $1
       GROUP BY bp.id, bc.name
-    `, [ newPost.id ]);
+    `, [ blog.id ]);
 
-    res.status(201).json(rows[0]);
+    res.status(201).json(rows2[0]);
   } catch (err) {
     console.error('POST /api/blogs error:', err);
     res.status(500).json({ error: 'Erreur serveur lors de la création de l’article' });

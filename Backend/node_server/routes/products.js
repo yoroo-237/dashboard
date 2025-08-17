@@ -2,20 +2,9 @@
 const express = require('express');
 const pool    = require('../db');
 const { verifyToken } = require('../middleware/auth');
-const multer  = require('multer');
-const path    = require('path');
+const { uploadToSupabaseStorage } = require('../utils/supabase');
 
 const router = express.Router();
-
-// Multer config: stocke dans /uploads et conserve l'extension
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename:    (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}${ext}`);
-  }
-});
-const upload = multer({ storage });
 
 // GET all products
 router.get('/', verifyToken, async (req, res) => {
@@ -39,34 +28,42 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // CREATE product (multipart/form-data pour l'image)
-router.post('/', verifyToken, upload.single('image'), async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const {
       name, price, description = '',
-      category_id, rating, stock, featured = false
+      category_id, rating, stock, featured = false,
+      image_url // Permet d'envoyer directement une URL depuis le front
     } = req.body;
 
     // validations...
     if (!name)      return res.status(400).json({ error:'name requis' });
     if (!category_id) return res.status(400).json({ error:'category_id requis' });
 
-    // URL de l’image
-    const image_url = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : '';
+    let finalImageUrl = image_url || '';
+    // Si un fichier est envoyé (upload direct)
+    if (req.files && req.files.image) {
+      try {
+        finalImageUrl = await uploadToSupabaseStorage(req.files.image, 'product-images');
+      } catch (e) {
+        return res.status(500).json({ error: 'Erreur upload image Supabase', details: e.message });
+      }
+    }
 
     const { rows } = await pool.query(`
       INSERT INTO public.product
         (name, price, description, image, category_id, rating, stock, featured)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING *
-    `, [name, price, description, image_url, category_id, rating, stock, featured]);
-
+      RETURNING *`,
+      [name, price, description, finalImageUrl, category_id, rating, stock, featured]
+    );
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur serveur lors de la création' });
+    console.error('POST /api/products error:', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la création du produit' });
   }
 });
-router.put('/:id', verifyToken, upload.single('avatar'), async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const reviewId = parseInt(req.params.id, 10);
     if (isNaN(reviewId)) {
@@ -117,7 +114,7 @@ router.put('/:id', verifyToken, upload.single('avatar'), async (req, res) => {
   }
 });
 // UPDATE product
-router.put('/:id', verifyToken, upload.single('image'), async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const {
