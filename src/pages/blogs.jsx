@@ -4,6 +4,7 @@ import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload, FiClock } from 'react-icons/fi';
 import './Pages.css';
+import { supabase } from '../services/supabaseClient';
 const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Blog() {
@@ -155,6 +156,20 @@ export default function Blog() {
     }
   };
 
+  // Nouvelle fonction pour uploader une image sur Supabase Storage
+  async function uploadImageToSupabase(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const { data, error } = await supabase.storage.from('blog-images').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (error) throw error;
+    // Récupérer l'URL publique
+    const { data: publicUrlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
+    return publicUrlData.publicUrl;
+  }
+
   // -------------------------------------------------------------
   // 4) RÉINITIALISER LE FORMULAIRE
   // -------------------------------------------------------------
@@ -186,41 +201,34 @@ export default function Blog() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Préparer FormData
-      const data = new FormData();
-      data.append('title', form.title);
-      data.append('excerpt', form.excerpt);
-      data.append('image_caption', form.imageCaption || '');
-      data.append('author', form.author);
-      data.append('content', form.content);
-      data.append('category_id', form.category_id || '');
-      data.append('likes', form.likes || 0);
-      data.append('comments_count', form.commentsCount || 0);
-      data.append('reading_time', form.readingTime || 0);
-      // On envoie “tags” sous forme JSON de noms de tags
-      // MAIS notre route POST/PUT attend plutôt un tableau de noms de tags
-      // → on enverra d’abord un tableau de noms choisis:
-      const tagNames = form.tags
-        .map(tid => {
+      let imageUrl = form.image;
+      if (form.imageFile) {
+        imageUrl = await uploadImageToSupabase(form.imageFile);
+      }
+      // Préparer FormData ou objet simple
+      const blogData = {
+        title: form.title,
+        excerpt: form.excerpt,
+        image_caption: form.imageCaption || '',
+        author: form.author,
+        content: form.content,
+        category_id: form.category_id || '',
+        likes: form.likes || 0,
+        comments_count: form.commentsCount || 0,
+        reading_time: form.readingTime || 0,
+        tags: form.tags.map(tid => {
           const obj = tagsList.find(x => String(x.id) === String(tid));
           return obj ? obj.name : null;
-        })
-        .filter(x => x !== null);
-      data.append('tags', JSON.stringify(tagNames));
-      if (form.imageFile) {
-        data.append('image', form.imageFile);
-      }
-
-      const cfg = { headers: { 'Content-Type': 'multipart/form-data' } };
+        }).filter(x => x !== null),
+        image: imageUrl
+      };
       let res;
       if (editingId) {
-        // Mise à jour
-        res = await api.put(`${API_URL}/api/blogs/${editingId}`, data, cfg);
+        res = await api.put(`${API_URL}/api/blogs/${editingId}`, blogData);
         toast.success('Article mis à jour !');
         setBlogs(bs => bs.map(b => (b.id === editingId ? res.data : b)));
       } else {
-        // Création
-        res = await api.post(`${API_URL}/api/blogs`, data, cfg);
+        res = await api.post(`${API_URL}/api/blogs`, blogData);
         toast.success('Article publié !');
         setBlogs(bs => [res.data, ...bs]);
       }
