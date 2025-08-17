@@ -4,6 +4,7 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload } from 'react-icons/fi';
 import './Pages.css';
+import { uploadImageToSupabase } from '../services/supabaseUpload';
 const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Product() {
@@ -111,27 +112,27 @@ export default function Product() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const data = new FormData();
-      data.append('name',        form.name);
-      data.append('price',       form.price);
-      data.append('rating',      form.rating);
-      data.append('stock',       form.stock);
-      data.append('category_id', form.category);
-      data.append('featured', form.featured);
-      data.append('description', form.description);
-      if (form.imageFile) data.append('image', form.imageFile);
-
+      let imageUrl = form.image;
+      if (form.imageFile) {
+        imageUrl = await uploadImageToSupabase(form.imageFile, 'product-images');
+      }
+      const productData = {
+        name: form.name,
+        price: form.price,
+        rating: form.rating,
+        stock: form.stock,
+        category_id: form.category,
+        featured: form.featured,
+        description: form.description,
+        image_url: imageUrl
+      };
       let res;
       if (editingId) {
-        res = await api.put(`${API_URL}/api/products/${editingId}`, data, {
-          headers:{ 'Content-Type':'multipart/form-data' }
-        });
+        res = await api.put(`${API_URL}/api/products/${editingId}`, productData);
         toast.success('Produit mis à jour !');
         setProducts(p=>p.map(x=> x.id===editingId ? res.data : x));
       } else {
-        res = await api.post(`${API_URL}/api/products`, data, {
-          headers:{ 'Content-Type':'multipart/form-data' }
-        });
+        res = await api.post(`${API_URL}/api/products`, productData);
         toast.success('Produit ajouté !');
         setProducts(p => [res.data, ...p]);
       }

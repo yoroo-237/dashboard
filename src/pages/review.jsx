@@ -4,6 +4,7 @@ import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { FiEdit2, FiTrash2, FiUpload } from 'react-icons/fi';
+import { uploadImageToSupabase } from '../services/supabaseUpload';
 import './Pages.css';
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -75,35 +76,28 @@ export default function Review() {
     if (isNaN(numRating) || numRating < 0 || numRating > 5) {
       return toast.warn('La note doit être un nombre entre 0 et 5.');
     }
-
     try {
-      const data = new FormData();
-      data.append('author', form.author.trim());
-      data.append('rating', numRating);
-      data.append('text', form.text.trim());
-      if (form.date && form.date.trim() !== '') {
-        data.append('date', form.date);
-      }
+      let avatarUrl = form.avatar;
       if (form.avatarFile) {
-        data.append('avatar', form.avatarFile);
+        avatarUrl = await uploadImageToSupabase(form.avatarFile, 'review-avatars');
       }
-
-      const cfg = { headers: { 'Content-Type': 'multipart/form-data' } };
+      const reviewData = {
+        author: form.author.trim(),
+        rating: numRating,
+        text: form.text.trim(),
+        date: form.date && form.date.trim() !== '' ? form.date : undefined,
+        avatar: avatarUrl
+      };
       let res;
       if (editingId) {
-        // Mise à jour existante
-        res = await api.put(`${API_URL}/api/reviews/${editingId}`, data, cfg);
+        res = await api.put(`${API_URL}/api/reviews/${editingId}`, reviewData);
         toast.success('Avis mis à jour !');
-        setReviews(rs =>
-          rs.map(r => (r.id === editingId ? res.data : r))
-        );
+        setReviews(rs => rs.map(r => (r.id === editingId ? res.data : r)));
       } else {
-        // Création d’un nouvel avis
-        res = await api.post(`${API_URL}/api/reviews`, data, cfg);
+        res = await api.post(`${API_URL}/api/reviews`, reviewData);
         toast.success('Avis publié !');
         setReviews(rs => [res.data, ...rs]);
       }
-
       resetForm();
     } catch (err) {
       console.error(err.response?.data || err);
