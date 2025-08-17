@@ -356,7 +356,7 @@ export default function Product() {
               <img
                 src={p.image_url.startsWith('http')
                   ? p.image_url
-                  : `http://localhost:5000${p.image_url}`}
+                  : `${process.env.REACT_APP_API_URL || ''}${p.image_url}`}
                 crossOrigin="anonymous"
                 className="card-img"
                 alt={p.name}
