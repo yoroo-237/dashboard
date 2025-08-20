@@ -570,59 +570,48 @@ export default function Product() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       toast.error('Veuillez corriger les erreurs du formulaire');
       return;
     }
-    
     try {
       setLoading(true);
-      
-      // Upload all files (images/videos) in parallel
-      let uploadedMedia = [];
-      if (form.mediaFiles.length) {
-        toast.info('Upload des médias en cours...');
-        uploadedMedia = await Promise.all(form.mediaFiles.map(async file => {
-          const url = await uploadImageToSupabase(file, 'product-media');
-          return { url, type: file.type };
-        }));
+      // Construction du FormData pour upload multi-médias
+      const formData = new FormData();
+      formData.append('name', form.name.trim());
+      formData.append('price', Number(form.price));
+      formData.append('rating', Number(form.rating));
+      formData.append('stock', Number(form.stock));
+      formData.append('category_id', form.category);
+      formData.append('featured', form.featured);
+      formData.append('description', form.description.trim());
+      // Ajout des fichiers à uploader
+      for (const file of form.mediaFiles) {
+        formData.append('mediaFiles', file);
       }
-      
-      // For editing, keep existing media except those marked for removal
-      let finalMedia = [...existingMedia, ...uploadedMedia];
-      
-      const productData = {
-        name: form.name.trim(),
-        price: Number(form.price),
-        rating: Number(form.rating),
-        stock: Number(form.stock),
-        category_id: form.category,
-        featured: form.featured,
-        description: form.description.trim(),
-        media: finalMedia
-      };
-      
+      // Ajout des médias existants à conserver (hors ceux à supprimer)
+      const keptMedia = existingMedia.filter(m => !mediaToRemove.some(rm => rm.url === m.url));
+      formData.append('existingMedia', JSON.stringify(keptMedia));
       let res;
       if (editingId) {
-        res = await api.put(`${API_URL}/api/products/${editingId}`, {
-          ...productData,
-          removeMedia: mediaToRemove
+        res = await api.put(`/api/products/${editingId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
         toast.success('Produit mis à jour avec succès !');
-        setProducts(p => p.map(x => 
+        setProducts(p => p.map(x =>
           x.id === editingId ? { ...res.data, media: res.data.media || [] } : x
         ));
       } else {
-        res = await api.post(`${API_URL}/api/products`, productData);
+        res = await api.post('/api/products', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
         toast.success('Produit ajouté avec succès !');
         setProducts(p => [{ ...res.data, media: res.data.media || [] }, ...p]);
       }
-      
       resetForm();
     } catch (err) {
       console.error('Submit error:', err);
-      toast.error('Erreur lors de l'enregistrement du produit');
+      toast.error('Erreur lors de l\'enregistrement du produit');
     } finally {
       setLoading(false);
     }
