@@ -70,13 +70,13 @@ export const updateUser = (id, data) =>
 export const fetchProducts = () =>
   api.get('/api/products');
 
-// 2) Ajouter un produit (FormData : inclut image, etc.)
+// 2) Ajouter un produit (FormData : inclut mediaFiles[] et existingMedia)
 export const addProduct = formData =>
   api.post('/api/products', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
-// 3) Mettre à jour un produit (FormData)
+// 3) Mettre à jour un produit (FormData : inclut mediaFiles[] et existingMedia)
 export const updateProduct = (id, formData) =>
   api.put(`/api/products/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }

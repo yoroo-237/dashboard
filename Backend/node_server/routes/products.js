@@ -6,13 +6,13 @@ const { uploadToSupabaseStorage } = require('../utils/supabase');
 
 const router = express.Router();
 
-// GET all products
+// GET all products (retourne le champ media)
 router.get('/', verifyToken, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT
         p.id, p.name, p.price, p.description,
-        p.image      AS image_url,
+        p.media, -- tableau JSON [{url,type}]
         p.rating, p.stock, p.featured,
         c.id   AS category_id,
         c.name AS category_name
@@ -27,35 +27,42 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// CREATE product (multipart/form-data pour l'image)
+// CREATE product (multipart/form-data pour les médias)
 router.post('/', verifyToken, async (req, res) => {
   try {
     const {
       name, price, description = '',
       category_id, rating, stock, featured = false,
-      image_url // Permet d'envoyer directement une URL depuis le front
+      existingMedia // JSON.stringify([{url,type}]) depuis le front (pour édition)
     } = req.body;
 
-    // validations...
     if (!name)      return res.status(400).json({ error:'name requis' });
     if (!category_id) return res.status(400).json({ error:'category_id requis' });
 
-    let finalImageUrl = image_url || '';
-    // Si un fichier est envoyé (upload direct)
-    if (req.files && req.files.image) {
-      try {
-        finalImageUrl = await uploadToSupabaseStorage(req.files.image, 'product-images');
-      } catch (e) {
-        return res.status(500).json({ error: 'Erreur upload image Supabase', details: e.message });
+    // Gestion des médias (upload Supabase + concat existants)
+    let mediaArray = [];
+    // 1. Upload des nouveaux fichiers
+    if (req.files && req.files.mediaFiles) {
+      const files = Array.isArray(req.files.mediaFiles) ? req.files.mediaFiles : [req.files.mediaFiles];
+      for (const file of files) {
+        const url = await uploadToSupabaseStorage(file, 'product-images');
+        mediaArray.push({ url, type: file.mimetype });
       }
+    }
+    // 2. Ajouter les médias existants (si édition)
+    if (existingMedia) {
+      try {
+        const existing = JSON.parse(existingMedia);
+        mediaArray = mediaArray.concat(existing);
+      } catch {}
     }
 
     const { rows } = await pool.query(`
       INSERT INTO public.product
-        (name, price, description, image, category_id, rating, stock, featured)
+        (name, price, description, media, category_id, rating, stock, featured)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING *`,
-      [name, price, description, finalImageUrl, category_id, rating, stock, featured]
+      [name, price, description, JSON.stringify(mediaArray), category_id, rating, stock, featured]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -113,26 +120,38 @@ router.put('/:id', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur lors de la mise à jour de l’avis' });
   }
 });
-// UPDATE product
+// UPDATE product (multipart/form-data pour les médias)
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const {
       name, price, description = '',
-      category_id, rating, stock, featured = false
+      category_id, rating, stock, featured = false,
+      existingMedia // JSON.stringify([{url,type}]) depuis le front (pour édition)
     } = req.body;
 
-    let image_url = req.body.image_url || '';
-    if (req.file) {
-      image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Gestion des médias (upload Supabase + concat existants)
+    let mediaArray = [];
+    if (req.files && req.files.mediaFiles) {
+      const files = Array.isArray(req.files.mediaFiles) ? req.files.mediaFiles : [req.files.mediaFiles];
+      for (const file of files) {
+        const url = await uploadToSupabaseStorage(file, 'product-images');
+        mediaArray.push({ url, type: file.mimetype });
+      }
+    }
+    if (existingMedia) {
+      try {
+        const existing = JSON.parse(existingMedia);
+        mediaArray = mediaArray.concat(existing);
+      } catch {}
     }
 
     const { rows } = await pool.query(`
       UPDATE public.product SET
         name=$1, price=$2, description=$3,
-        image=$4, category_id=$5, rating=$6, stock=$7, featured=$8
+        media=$4, category_id=$5, rating=$6, stock=$7, featured=$8
       WHERE id=$9 RETURNING *
-    `, [name,price,description,image_url,category_id,rating,stock,featured,id]);
+    `, [name,price,description,JSON.stringify(mediaArray),category_id,rating,stock,featured,id]);
 
     if (!rows[0]) return res.status(404).json({ error:'Produit non trouvé' });
     res.json(rows[0]);
