@@ -4,7 +4,7 @@ import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload, FiClock } from 'react-icons/fi';
 import './Pages.css';
-import { supabase } from '../services/supabaseClient';
+import { uploadImageToSupabase } from '../services/supabaseUpload';
 const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Blog() {
@@ -156,19 +156,90 @@ export default function Blog() {
     }
   };
 
-  // Nouvelle fonction pour uploader une image sur Supabase Storage
-  async function uploadImageToSupabase(file) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const { data, error } = await supabase.storage.from('blog-images').upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
-    if (error) throw error;
-    // Récupérer l'URL publique
-    const { data: publicUrlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
-    return publicUrlData.publicUrl;
-  }
+  // Utilise la fonction utilitaire partagée pour uploader sur Supabase
+  // (déjà importée en haut)
+// Composant MediaCarousel réutilisable (comme dans products.jsx)
+function MediaCarousel({ media = [] }) {
+  const [current, setCurrent] = useState(0);
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const intervalRef = useRef(null);
+
+  const handleManual = useCallback((idx) => {
+    setCurrent(idx);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  }, []);
+
+  const handlePrevious = useCallback((e) => {
+    e.stopPropagation();
+    setCurrent(c => (c - 1 + media.length) % media.length);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  }, [media.length]);
+
+  const handleNext = useCallback((e) => {
+    e.stopPropagation();
+    setCurrent(c => (c + 1) % media.length);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  }, [media.length]);
+
+  useEffect(() => {
+    if (!media.length || !isAutoplay) return;
+    intervalRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % media.length);
+    }, 3400);
+    return () => clearInterval(intervalRef.current);
+  }, [media, isAutoplay]);
+
+  if (!media.length) return null;
+
+  const boxStyle = {
+    width: "300px",
+    height: "220px",
+    objectFit: "cover",
+    background: "#f5f5f5",
+    borderRadius: "12px",
+    margin: "0 auto",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    overflow: "hidden"
+  };
+  const m = media[current];
+  return (
+    <div className="carousel-box" style={{textAlign:'center'}}>
+      <div style={boxStyle}>
+        {m.type && m.type.startsWith('image') ? (
+          <img src={m.url} alt="" style={{maxWidth:'100%', maxHeight:'100%', objectFit:'cover', borderRadius:'12px'}} loading="lazy" />
+        ) : m.type && m.type.startsWith('video') ? (
+          <video src={m.url} controls style={{maxWidth:'100%', maxHeight:'100%', objectFit:'cover', borderRadius:'12px'}} preload="metadata" />
+        ) : (
+          <img src={m.url} alt="" style={{maxWidth:'100%', maxHeight:'100%', objectFit:'cover', borderRadius:'12px'}} loading="lazy" />
+        )}
+        {media.length > 1 && (
+          <>
+            <button onClick={handlePrevious} className="carousel-nav prev" style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.5)',color:'white',border:'none',borderRadius:'50%',width:32,height:32,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,opacity:0.7,transition:'opacity 0.2s'}} onMouseEnter={e=>e.target.style.opacity=1} onMouseLeave={e=>e.target.style.opacity=0.7}>‹</button>
+            <button onClick={handleNext} className="carousel-nav next" style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.5)',color:'white',border:'none',borderRadius:'50%',width:32,height:32,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,opacity:0.7,transition:'opacity 0.2s'}} onMouseEnter={e=>e.target.style.opacity=1} onMouseLeave={e=>e.target.style.opacity=0.7}>›</button>
+          </>
+        )}
+        {media.length > 1 && (
+          <div style={{position:'absolute',bottom:8,right:8,background:'rgba(0,0,0,0.7)',color:'white',padding:'2px 8px',borderRadius:12,fontSize:12}}>
+            {current + 1}/{media.length}
+          </div>
+        )}
+      </div>
+      {media.length > 1 && (
+        <div className="carousel-dots" style={{margin:'8px 0'}}>
+          {media.map((_,i) =>
+            <span key={i} title={`Voir le média ${i+1}`} onClick={()=>handleManual(i)} style={{display:'inline-block',margin:'0 3px',width:current===i?12:10,height:current===i?12:10,background:current===i?'#4a90e2':'#ccc',borderRadius:'50%',cursor:'pointer',transition:'all 0.2s ease',transform:current===i?'scale(1.1)':'scale(1)'}} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
   // -------------------------------------------------------------
   // 4) RÉINITIALISER LE FORMULAIRE
@@ -562,13 +633,12 @@ export default function Blog() {
       <div className="grid">
         {blogs.map(b => (
           <div key={b.id} className="card enhanced">
-            {b.image && (
-              <img
-                src={b.image}
-                className="card-img"
-                alt={b.title}
-              />
-            )}
+            {/* Affichage image/article via MediaCarousel (support multi-images) */}
+            {b.media && Array.isArray(b.media) && b.media.length > 0 ? (
+              <MediaCarousel media={b.media} />
+            ) : b.image ? (
+              <img src={b.image} className="card-img" alt={b.title} />
+            ) : null}
             <div className="card-body">
               <h3 className="card-title-center">{b.title}</h3>
               <p className="meta">

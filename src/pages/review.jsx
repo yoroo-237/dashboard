@@ -1,3 +1,83 @@
+// Composant MediaCarousel réutilisable (comme dans products.jsx et blogs.jsx)
+function MediaCarousel({ media = [] }) {
+  const [current, setCurrent] = useState(0);
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const intervalRef = useRef(null);
+
+  const handleManual = (idx) => {
+    setCurrent(idx);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  };
+
+  const handlePrevious = (e) => {
+    e.stopPropagation();
+    setCurrent(c => (c - 1 + media.length) % media.length);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  };
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrent(c => (c + 1) % media.length);
+    setIsAutoplay(false);
+    setTimeout(() => setIsAutoplay(true), 5000);
+  };
+
+  useEffect(() => {
+    if (!media.length || !isAutoplay) return;
+    intervalRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % media.length);
+    }, 3400);
+    return () => clearInterval(intervalRef.current);
+  }, [media, isAutoplay]);
+
+  if (!media.length) return null;
+
+  const boxStyle = {
+    width: "120px",
+    height: "120px",
+    objectFit: "cover",
+    background: "#f5f5f5",
+    borderRadius: "50%",
+    margin: "0 auto",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    overflow: "hidden"
+  };
+  const m = media[current];
+  return (
+    <div className="carousel-box" style={{textAlign:'center'}}>
+      <div style={boxStyle}>
+        {m.type && m.type.startsWith('image') ? (
+          <img src={m.url} alt="" style={{maxWidth:'100%', maxHeight:'100%', objectFit:'cover', borderRadius:'50%'}} loading="lazy" />
+        ) : (
+          <img src={m.url} alt="" style={{maxWidth:'100%', maxHeight:'100%', objectFit:'cover', borderRadius:'50%'}} loading="lazy" />
+        )}
+        {media.length > 1 && (
+          <>
+            <button onClick={handlePrevious} className="carousel-nav prev" style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.5)',color:'white',border:'none',borderRadius:'50%',width:24,height:24,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,opacity:0.7,transition:'opacity 0.2s'}} onMouseEnter={e=>e.target.style.opacity=1} onMouseLeave={e=>e.target.style.opacity=0.7}>‹</button>
+            <button onClick={handleNext} className="carousel-nav next" style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.5)',color:'white',border:'none',borderRadius:'50%',width:24,height:24,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,opacity:0.7,transition:'opacity 0.2s'}} onMouseEnter={e=>e.target.style.opacity=1} onMouseLeave={e=>e.target.style.opacity=0.7}>›</button>
+          </>
+        )}
+        {media.length > 1 && (
+          <div style={{position:'absolute',bottom:8,right:8,background:'rgba(0,0,0,0.7)',color:'white',padding:'2px 8px',borderRadius:12,fontSize:10}}>
+            {current + 1}/{media.length}
+          </div>
+        )}
+      </div>
+      {media.length > 1 && (
+        <div className="carousel-dots" style={{margin:'8px 0'}}>
+          {media.map((_,i) =>
+            <span key={i} title={`Voir le média ${i+1}`} onClick={()=>handleManual(i)} style={{display:'inline-block',margin:'0 3px',width:current===i?10:8,height:current===i?10:8,background:current===i?'#4a90e2':'#ccc',borderRadius:'50%',cursor:'pointer',transition:'all 0.2s ease',transform:current===i?'scale(1.1)':'scale(1)'}} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 // src/pages/Review.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
@@ -234,13 +314,12 @@ export default function Review() {
           const numericRating = Number(r.rating);
           return (
             <div key={r.id} className="card enhanced">
-              {r.avatar && (
-                <img
-                  src={r.avatar}
-                  className="card-img"
-                  alt={`${r.author} – avatar`}
-                />
-              )}
+              {/* Affichage avatar via MediaCarousel (support multi-images) */}
+              {r.media && Array.isArray(r.media) && r.media.length > 0 ? (
+                <MediaCarousel media={r.media} />
+              ) : r.avatar ? (
+                <img src={r.avatar} className="card-img" alt={`${r.author} – avatar`} />
+              ) : null}
               <div className="card-body">
                 <h3 className="card-title-center">{r.author}</h3>
                 <p className="meta">

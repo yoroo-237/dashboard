@@ -2,6 +2,9 @@
 const express = require('express');
 const pool    = require('../db');
 const { verifyToken } = require('../middleware/auth');
+
+const multer = require('multer');
+const upload = multer();
 const { uploadToSupabaseStorage } = require('../utils/supabase');
 
 const router = express.Router();
@@ -28,7 +31,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // CREATE product (multipart/form-data pour les médias)
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, upload.any(), async (req, res) => {
   try {
     const {
       name, price, description = '',
@@ -70,7 +73,8 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur lors de la création du produit' });
   }
 });
-router.put('/:id', verifyToken, async (req, res) => {
+// UPDATE product (multipart/form-data pour les médias)
+router.put('/:id', verifyToken, upload.any(), async (req, res) => {
   try {
     const reviewId = parseInt(req.params.id, 10);
     if (isNaN(reviewId)) {
