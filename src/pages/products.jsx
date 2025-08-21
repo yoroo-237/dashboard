@@ -13,15 +13,6 @@ function MediaCarousel({ media = [] }) {
   const [isAutoplay, setIsAutoplay] = useState(true);
   const intervalRef = useRef(null);
 
-  useEffect(() => {
-    if (!media.length || !isAutoplay) return;
-    intervalRef.current = setInterval(() => {
-      setCurrent(c => (c + 1) % media.length);
-    }, 3400);
-    return () => clearInterval(intervalRef.current);
-  }, [media, isAutoplay]);
-
-  if (!media.length) return null;
 
   const handleManual = useCallback((idx) => {
     setCurrent(idx);
@@ -42,6 +33,16 @@ function MediaCarousel({ media = [] }) {
     setIsAutoplay(false);
     setTimeout(() => setIsAutoplay(true), 5000);
   }, [media.length]);
+
+  useEffect(() => {
+    if (!media.length || !isAutoplay) return;
+    intervalRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % media.length);
+    }, 3400);
+    return () => clearInterval(intervalRef.current);
+  }, [media, isAutoplay]);
+
+  if (!media.length) return null;
 
   // Max size normalization (responsive)
   const boxStyle = {
