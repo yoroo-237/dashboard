@@ -1,5 +1,5 @@
 // src/pages/Blog.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FiEdit2, FiTrash2, FiPlus, FiUpload, FiClock } from 'react-icons/fi';

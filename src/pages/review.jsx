@@ -1,3 +1,11 @@
+// src/pages/Review.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
+import { toast } from 'react-toastify';
+import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import { FiEdit2, FiTrash2, FiUpload } from 'react-icons/fi';
+import { uploadImageToSupabase } from '../services/supabaseUpload';
+import './Pages.css';
 // Composant MediaCarousel réutilisable (comme dans products.jsx et blogs.jsx)
 function MediaCarousel({ media = [] }) {
   const [current, setCurrent] = useState(0);
@@ -78,14 +86,6 @@ function MediaCarousel({ media = [] }) {
     </div>
   );
 }
-// src/pages/Review.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import api from '../services/api';
-import { toast } from 'react-toastify';
-import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
-import { FiEdit2, FiTrash2, FiUpload } from 'react-icons/fi';
-import { uploadImageToSupabase } from '../services/supabaseUpload';
-import './Pages.css';
 const API_URL = process.env.REACT_APP_API_URL;
 
 export default function Review() {
