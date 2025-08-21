@@ -1,5 +1,5 @@
 // src/pages/Review.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
